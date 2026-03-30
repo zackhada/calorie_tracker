@@ -7,35 +7,50 @@ interface VoiceInputProps {
 }
 
 export default function VoiceInput({ onMealLogged }: VoiceInputProps) {
-  const { transcript, isListening, isSupported, startListening, stopListening, resetTranscript, error } =
+  const { transcript, interimText, isListening, isSupported, startListening, stopListening, resetTranscript, error } =
     useSpeechRecognition();
   const [editableText, setEditableText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showEditor, setShowEditor] = useState(false);
+  const [hasRecorded, setHasRecorded] = useState(false);
 
   useEffect(() => {
-    if (transcript) {
-      setEditableText(transcript);
+    if (transcript || interimText) {
+      setEditableText(transcript + (interimText ? (transcript ? " " : "") + interimText : ""));
     }
-  }, [transcript]);
+  }, [transcript, interimText]);
 
   useEffect(() => {
     if (!isListening && transcript) {
-      setShowEditor(true);
+      setHasRecorded(true);
     }
   }, [isListening, transcript]);
 
-  const handleMicClick = () => {
+  const handleRecord = () => {
     if (isListening) {
       stopListening();
     } else {
-      setShowEditor(false);
       setSubmitError(null);
+      setHasRecorded(false);
       resetTranscript();
       setEditableText("");
       startListening();
     }
+  };
+
+  const handleReRecord = () => {
+    setSubmitError(null);
+    setHasRecorded(false);
+    resetTranscript();
+    setEditableText("");
+    startListening();
+  };
+
+  const handleClear = () => {
+    setHasRecorded(false);
+    setEditableText("");
+    setSubmitError(null);
+    resetTranscript();
   };
 
   const handleSubmit = async () => {
@@ -48,7 +63,7 @@ export default function VoiceInput({ onMealLogged }: VoiceInputProps) {
       const today = new Date().toISOString().slice(0, 10);
       await logFood(text, today);
       setEditableText("");
-      setShowEditor(false);
+      setHasRecorded(false);
       resetTranscript();
       onMealLogged();
     } catch (err: any) {
@@ -63,88 +78,144 @@ export default function VoiceInput({ onMealLogged }: VoiceInputProps) {
     await handleSubmit();
   };
 
+  const displayText = editableText || "";
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <div className="flex flex-col items-center">
-        {/* Microphone Button */}
+    <div className="bg-dark-800 border border-dark-600 rounded-lg p-6">
+      {/* Top section: mic button + status */}
+      <div className="flex items-center gap-5">
         {isSupported && (
           <button
-            onClick={handleMicClick}
+            onClick={handleRecord}
             disabled={isSubmitting}
-            className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 ${
+            className={`relative shrink-0 w-16 h-16 rounded-lg flex items-center justify-center transition-all duration-300 ${
               isListening
-                ? "bg-red-500 shadow-lg shadow-red-200 scale-110"
-                : "bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-200 hover:scale-105"
+                ? "bg-neon-red/20 border-2 border-neon-red shadow-neon-red"
+                : "bg-dark-700 border border-dark-500 hover:border-neon-cyan/50 hover:shadow-neon-cyan"
             }`}
           >
             {isListening && (
-              <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30" />
+              <span className="absolute inset-0 rounded-lg bg-neon-red/10 animate-pulse-ring" />
             )}
-            <svg className="w-8 h-8 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-              />
-            </svg>
+            {isListening ? (
+              <svg className="w-6 h-6 text-neon-red relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="1" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+              </svg>
+            )}
           </button>
         )}
 
-        <p className="mt-3 text-sm text-gray-500">
-          {isListening ? "Listening... tap to stop" : isSupported ? "Tap to speak what you ate" : "Type what you ate below"}
-        </p>
-
-        {/* Live transcript while listening */}
-        {isListening && transcript && (
-          <p className="mt-3 text-gray-700 text-center italic animate-pulse">"{transcript}"</p>
-        )}
-
-        {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+        <div className="flex-1 min-w-0">
+          {isListening ? (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-end gap-0.5 h-7">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="w-1 bg-neon-red rounded-full waveform-bar" style={{ height: '12px' }} />
+                  ))}
+                </div>
+                <span className="text-neon-red text-xs font-mono uppercase tracking-wider">Recording</span>
+              </div>
+              {displayText && (
+                <p className="text-white/80 text-sm truncate">"{displayText}"</p>
+              )}
+              {!displayText && (
+                <p className="text-dark-500 text-sm font-mono">Listening...</p>
+              )}
+            </div>
+          ) : hasRecorded && displayText ? (
+            <div>
+              <p className="text-xs text-neon-green font-mono uppercase tracking-wider mb-1">Captured</p>
+              <p className="text-white/80 text-sm truncate">"{displayText}"</p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-white text-sm font-medium">
+                {isSupported ? "Tap to record what you ate" : "Type what you ate"}
+              </p>
+              <p className="text-dark-500 text-xs mt-0.5 font-mono">
+                {isSupported ? 'or type it below' : 'voice not supported in this browser'}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Editable text area after speech or as fallback */}
-      {(showEditor || !isSupported) && (
-        <form onSubmit={handleTextSubmit} className="mt-5">
-          <textarea
-            value={editableText}
-            onChange={(e) => setEditableText(e.target.value)}
-            placeholder='e.g., "Two eggs, toast with butter, and a glass of orange juice"'
-            rows={3}
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-          />
-          <div className="flex justify-end mt-3 gap-3">
-            {showEditor && (
+      {error && (
+        <div className="mt-3 px-3 py-2 bg-neon-red/10 border border-neon-red/20 rounded text-neon-red text-xs font-mono">
+          {error}
+        </div>
+      )}
+
+      {/* Text input area - always visible */}
+      <form onSubmit={handleTextSubmit} className="mt-4">
+        <textarea
+          value={isListening ? displayText : editableText}
+          onChange={(e) => { if (!isListening) setEditableText(e.target.value); }}
+          readOnly={isListening}
+          placeholder='"Two eggs, toast with butter, and a coffee"'
+          rows={2}
+          className="w-full bg-dark-700 border border-dark-600 rounded-lg px-4 py-3 text-white placeholder-dark-500 text-sm font-mono focus:outline-none focus:border-neon-cyan/40 focus:shadow-neon-cyan resize-none transition-all"
+        />
+
+        <div className="flex items-center justify-between mt-3">
+          <div className="flex gap-2">
+            {hasRecorded && !isListening && isSupported && (
               <button
                 type="button"
-                onClick={() => {
-                  setShowEditor(false);
-                  setEditableText("");
-                  resetTranscript();
-                }}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                onClick={handleReRecord}
+                disabled={isSubmitting}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-dark-500 hover:text-neon-cyan border border-dark-600 hover:border-neon-cyan/30 rounded transition-all"
               >
-                Cancel
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                </svg>
+                re-record
               </button>
             )}
-            <button
-              type="submit"
-              disabled={isSubmitting || !editableText.trim()}
-              className="px-6 py-2 bg-indigo-500 text-white text-sm font-medium rounded-xl hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                "Log It"
-              )}
-            </button>
+            {editableText && !isListening && (
+              <button
+                type="button"
+                onClick={handleClear}
+                disabled={isSubmitting}
+                className="px-3 py-1.5 text-xs font-mono text-dark-500 hover:text-neon-red border border-dark-600 hover:border-neon-red/30 rounded transition-all"
+              >
+                clear
+              </button>
+            )}
           </div>
-          {submitError && <p className="mt-2 text-sm text-red-500">{submitError}</p>}
-        </form>
-      )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting || !editableText.trim() || isListening}
+            className="px-5 py-2 bg-neon-cyan/10 text-neon-cyan text-sm font-mono font-medium border border-neon-cyan/30 rounded hover:bg-neon-cyan/20 hover:shadow-neon-cyan disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
+                analyzing...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                log it
+              </>
+            )}
+          </button>
+        </div>
+
+        {submitError && (
+          <div className="mt-2 px-3 py-2 bg-neon-red/10 border border-neon-red/20 rounded text-neon-red text-xs font-mono">
+            {submitError}
+          </div>
+        )}
+      </form>
     </div>
   );
 }

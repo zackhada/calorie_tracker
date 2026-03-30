@@ -12,10 +12,10 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-dark-950">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 text-sm">Loading...</p>
+          <div className="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
+          <p className="text-dark-500 text-xs font-mono">initializing...</p>
         </div>
       </div>
     );
@@ -27,9 +27,9 @@ function AppContent() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-dark-950">
         <Navbar />
-        <div className="pt-16">
+        <div className="pt-14">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/history" element={<HistoryView />} />

@@ -11,24 +11,19 @@ export default function MealList({ meals, onDelete }: MealListProps) {
   if (meals.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
+        <div className="w-14 h-14 border border-dark-600 rounded-lg flex items-center justify-center mx-auto mb-4 bg-dark-800">
+          <svg className="w-6 h-6 text-dark-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
         </div>
-        <p className="text-gray-500">No meals logged yet today</p>
-        <p className="text-gray-400 text-sm mt-1">Tap the microphone to get started</p>
+        <p className="text-dark-500 font-mono text-sm">No meals logged yet</p>
+        <p className="text-dark-600 text-xs font-mono mt-1">record or type to get started</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {meals.map((meal) => (
         <MealCard key={meal.id} meal={meal} onDelete={onDelete} />
       ))}

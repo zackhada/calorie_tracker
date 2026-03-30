@@ -28,33 +28,33 @@ export default function HistoryView() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">History</h1>
-          <p className="text-gray-500 mt-1">Last 30 days</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">History</h1>
+          <p className="text-dark-500 text-sm font-mono mt-1">last 30 days</p>
         </div>
         <Link
           to="/"
-          className="px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+          className="px-3 py-1.5 text-xs font-mono text-neon-cyan border border-neon-cyan/20 rounded hover:bg-neon-cyan/10 transition-all"
         >
-          Back to Today
+          &larr; today
         </Link>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
         </div>
       ) : error ? (
         <div className="text-center py-12">
-          <p className="text-red-500">{error}</p>
+          <p className="text-neon-red font-mono text-sm">{error}</p>
         </div>
       ) : history.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">No history yet. Start logging your meals!</p>
+          <p className="text-dark-500 font-mono text-sm">No history yet. Start logging meals.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {history.map((day) => (
             <DaySummaryCard key={day.date} summary={day} />
           ))}

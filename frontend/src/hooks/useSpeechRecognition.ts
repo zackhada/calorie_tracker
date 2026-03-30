@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 
 interface SpeechRecognitionHook {
   transcript: string;
+  interimText: string;
   isListening: boolean;
   isSupported: boolean;
   startListening: () => void;
@@ -26,6 +27,7 @@ const SpeechRecognition =
 
 export function useSpeechRecognition(): SpeechRecognitionHook {
   const [transcript, setTranscript] = useState("");
+  const [interimText, setInterimText] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -44,42 +46,49 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
 
     setError(null);
     setTranscript("");
+    setInterimText("");
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
+    recognition.maxAlternatives = 1;
+
+    let accumulated = "";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = "";
-      let interimTranscript = "";
+      let finalText = accumulated;
+      let interim = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+          finalText += (finalText ? " " : "") + result[0].transcript;
+          accumulated = finalText;
         } else {
-          interimTranscript += result[0].transcript;
+          interim += result[0].transcript;
         }
       }
 
-      setTranscript(finalTranscript || interimTranscript);
+      setTranscript(finalText);
+      setInterimText(interim);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (event.error === "aborted") return;
       const messages: Record<string, string> = {
-        "no-speech": "No speech detected. Please try again.",
-        "audio-capture": "No microphone found. Please check your microphone.",
-        "not-allowed": "Microphone access denied. Please allow microphone access.",
-        network: "Network error occurred. Please check your connection.",
-        aborted: "Speech recognition was aborted.",
+        "no-speech": "No speech detected. Try again.",
+        "audio-capture": "No microphone found.",
+        "not-allowed": "Microphone access denied.",
+        network: "Network error. Check your connection.",
       };
-      setError(messages[event.error] || `Speech recognition error: ${event.error}`);
+      setError(messages[event.error] || `Error: ${event.error}`);
       setIsListening(false);
     };
 
     recognition.onend = () => {
       setIsListening(false);
+      setInterimText("");
     };
 
     recognitionRef.current = recognition;
@@ -95,8 +104,9 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
 
   const resetTranscript = useCallback(() => {
     setTranscript("");
+    setInterimText("");
     setError(null);
   }, []);
 
-  return { transcript, isListening, isSupported, startListening, stopListening, resetTranscript, error };
+  return { transcript, interimText, isListening, isSupported, startListening, stopListening, resetTranscript, error };
 }

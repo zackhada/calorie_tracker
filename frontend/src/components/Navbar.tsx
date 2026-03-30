@@ -7,32 +7,32 @@ export default function Navbar() {
   const location = useLocation();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="text-xl font-bold text-indigo-600">
-            Calorie Tracker
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-900/90 backdrop-blur-md border-b border-dark-600">
+      <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-5">
+          <Link to="/" className="text-lg font-bold text-white tracking-tight">
+            FUEL<span className="text-neon-cyan">_</span>
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Link
               to="/"
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded text-sm font-medium font-mono transition-all ${
                 location.pathname === "/"
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  ? "text-neon-cyan bg-neon-cyan/10"
+                  : "text-dark-500 hover:text-white"
               }`}
             >
-              Today
+              today
             </Link>
             <Link
               to="/history"
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded text-sm font-medium font-mono transition-all ${
                 location.pathname === "/history"
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  ? "text-neon-cyan bg-neon-cyan/10"
+                  : "text-dark-500 hover:text-white"
               }`}
             >
-              History
+              history
             </Link>
           </div>
         </div>
@@ -42,18 +42,18 @@ export default function Navbar() {
             <img
               src={user.photoURL}
               alt={user.displayName || "User"}
-              className="w-8 h-8 rounded-full border border-gray-200"
+              className="w-7 h-7 rounded border border-dark-600"
               referrerPolicy="no-referrer"
             />
           )}
-          <span className="text-sm text-gray-600 hidden sm:inline">
-            {user?.displayName}
+          <span className="text-sm text-dark-500 hidden sm:inline font-mono">
+            {user?.displayName?.split(" ")[0]?.toLowerCase()}
           </span>
           <button
             onClick={signOut}
-            className="text-sm text-gray-400 hover:text-gray-600 transition-colors ml-2"
+            className="text-xs text-dark-500 hover:text-neon-red transition-colors ml-1 font-mono"
           >
-            Sign out
+            [exit]
           </button>
         </div>
       </div>
