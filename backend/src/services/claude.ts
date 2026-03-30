@@ -1,12 +1,21 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { VertexAI } from '@google-cloud/vertexai';
 import { config } from '../config';
 import { CalorieEstimate } from '../types';
 
-const client = new Anthropic({ apiKey: config.ANTHROPIC_API_KEY });
+const vertexAI = new VertexAI({
+  project: config.GOOGLE_CLOUD_PROJECT,
+  location: 'us-central1',
+});
 
-const SYSTEM_PROMPT = `You are a nutrition estimation assistant. Given a food description, parse each food item and estimate its calories, protein (g), carbs (g), and fat (g) assuming typical American portion sizes.
+const model = vertexAI.getGenerativeModel({
+  model: 'gemini-2.5-pro',
+  generationConfig: {
+    temperature: 0,
+    maxOutputTokens: 2048,
+  },
+  systemInstruction: `You are a nutrition estimation assistant. Given a food description, parse each food item and estimate its calories, protein (g), carbs (g), and fat (g) assuming typical American portion sizes.
 
-Return ONLY valid JSON in this exact format, with no other text:
+Return ONLY valid JSON in this exact format:
 {
   "items": [
     { "name": "food name", "calories": 0, "protein": 0, "carbs": 0, "fat": 0 }
@@ -14,7 +23,8 @@ Return ONLY valid JSON in this exact format, with no other text:
   "totalCalories": 0
 }
 
-totalCalories must equal the sum of all item calories. Be reasonable with portion estimates.`;
+totalCalories must equal the sum of all item calories. Be reasonable with portion estimates.`,
+});
 
 function parseResponse(text: string): CalorieEstimate {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -36,22 +46,17 @@ export async function estimateCalories(description: string): Promise<CalorieEsti
   const truncated = description.slice(0, 500);
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      temperature: 0,
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: truncated }],
-    });
+    const result = await model.generateContent(truncated);
+    const response = result.response;
+    const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    const textBlock = message.content.find((block) => block.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') {
-      if (attempt === 1) throw new Error('No text response from Claude');
+    if (!text) {
+      if (attempt === 1) throw new Error('No text response from Gemini');
       continue;
     }
 
     try {
-      return parseResponse(textBlock.text);
+      return parseResponse(text);
     } catch (parseError) {
       if (attempt === 1) {
         throw new Error('Failed to parse calorie estimate after retry');

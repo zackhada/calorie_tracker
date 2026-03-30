@@ -12,7 +12,6 @@ function requireEnv(name: string): string {
 
 export const config = {
   PORT: parseInt(process.env.PORT || '8080', 10),
-  ANTHROPIC_API_KEY: requireEnv('ANTHROPIC_API_KEY'),
   GOOGLE_CLOUD_PROJECT: requireEnv('GOOGLE_CLOUD_PROJECT'),
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
 };
