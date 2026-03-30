@@ -84,7 +84,8 @@ router.get('/api/history', async (req: Request, res: Response, next: NextFunctio
 
 router.delete('/api/meals/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await deleteMeal(req.user.uid, req.params.id);
+    const mealId = req.params.id as string;
+    await deleteMeal(req.user.uid, mealId);
     res.json({ success: true });
   } catch (error) {
     next(error);

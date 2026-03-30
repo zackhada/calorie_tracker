@@ -20,7 +20,7 @@ api.interceptors.request.use(async (config) => {
 });
 
 export async function logFood(description: string, date: string): Promise<Meal> {
-  const { data } = await api.post<Meal>("/api/meals", { description, date });
+  const { data } = await api.post<Meal>("/api/log-food", { description, date });
   return data;
 }
 
@@ -30,7 +30,7 @@ export async function getMeals(date: string): Promise<Meal[]> {
 }
 
 export async function getDailySummary(date: string): Promise<DailySummary> {
-  const { data } = await api.get<DailySummary>("/api/summary", { params: { date } });
+  const { data } = await api.get<DailySummary>("/api/daily-summary", { params: { date } });
   return data;
 }
 

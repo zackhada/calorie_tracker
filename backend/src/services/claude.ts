@@ -16,7 +16,7 @@ Return ONLY valid JSON in this exact format, with no other text:
 
 totalCalories must equal the sum of all item calories. Be reasonable with portion estimates.`;
 
-async function parseResponse(text: string): CalorieEstimate {
+function parseResponse(text: string): CalorieEstimate {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('No JSON found in response');
@@ -51,7 +51,7 @@ export async function estimateCalories(description: string): Promise<CalorieEsti
     }
 
     try {
-      return await parseResponse(textBlock.text);
+      return parseResponse(textBlock.text);
     } catch (parseError) {
       if (attempt === 1) {
         throw new Error('Failed to parse calorie estimate after retry');

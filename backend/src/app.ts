@@ -5,11 +5,13 @@ import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
-const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
 
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: allowedOrigins,
     credentials: true,
   })
 );

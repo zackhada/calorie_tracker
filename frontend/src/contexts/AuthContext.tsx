@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    setTokenGetter(() => getIdToken);
+    setTokenGetter(getIdToken);
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
